@@ -1,22 +1,48 @@
-const audioCtx = new AudioContext();
+// Declare globals
+let context: AudioContext;
+let input: MediaElementAudioSourceNode;
 
-const audioElement = document.getElementById("guitar") as HTMLMediaElement;
-const source = audioCtx.createMediaElementSource(audioElement);
+// Element refs
+const source = document.getElementById('audioClip') as HTMLMediaElement;
+const playButton = document.getElementById('play') as HTMLButtonElement;
+const pauseButton = document.getElementById('pause') as HTMLButtonElement;
 
-// Volume control
-const gainNode = audioCtx.createGain();
+/**
+ * Initialize the Web Audio API. Must be called after user input.
+ */
+function initializeAudio() {
+  // Create context
+  context = new AudioContext();
 
-// Stereo pan
-const stereoPanNode = audioCtx.createStereoPanner();
+  // Create our input source node
+  input = context.createMediaElementSource(source);
 
-// Build signal chain
-source.connect(gainNode).connect(stereoPanNode).connect(audioCtx.destination);
+  // Build audio node graph
+  input.connect(context.destination);
 
-// Wire event listeners
-const panElement = document.getElementById("pan") as HTMLInputElement;
-panElement.addEventListener("change", (e) => {
-  const target = e.target as HTMLInputElement;
-  console.log(target.value);
-  const val = parseInt(target.value);
-  stereoPanNode.pan.value = val;
-});
+  // Remove this function from the mouseover event
+  window.removeEventListener('mouseover', initializeAudio, false);
+}
+
+// Initialize AudioContext on mouse input
+window.addEventListener('mouseover', initializeAudio, false);
+
+// Play button
+playButton.addEventListener(
+  'click',
+  function () {
+    source.play();
+  },
+  false
+);
+
+// Pause button
+pauseButton.addEventListener(
+  'click',
+  function () {
+    source.pause();
+  },
+  false
+);
+
+// TODO: Resume stereo panning and volume controls...
