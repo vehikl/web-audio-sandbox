@@ -8,15 +8,15 @@
   </head>
   <body>
     <!-- Audio source -->
-    <audio id="audioClip" controls preload loop>
-      <source src="../assets/guitar.ogg" type="audio/ogg" />
-      <source src="../assets/guitar.mp3" type="audio/mpeg" />
-      <source src="../assets/guitar.wav" type="audio/wav" />
-    </audio>
+    <audio src="../assets/guitar.mp3" id="audioClip" controls loop></audio>
 
     <!-- Transport controls -->
     <button type="button" id="play">Play</button>
     <button type="button" id="pause">Pause</button>
+
+    <!-- Volume and pan controls -->
+    <input type="range" id="volume" min="0" max="1" step="0.01" />
+    <input type="range" id="panner" min="-1" max="1" step="0.01" />
 
     <script src="./index.ts"></script>
   </body>
