@@ -8,13 +8,11 @@
   </head>
   <body>
     <!-- Audio source -->
-    <audio
-      src="../assets/audio.mp3"
-      id="audioClip"
-      controls
-      preload
-      loop
-    ></audio>
+    <audio id="audioClip" controls preload loop>
+      <source src="../assets/guitar.ogg" type="audio/ogg" />
+      <source src="../assets/guitar.mp3" type="audio/mpeg" />
+      <source src="../assets/guitar.wav" type="audio/wav" />
+    </audio>
 
     <!-- Transport controls -->
     <button type="button" id="play">Play</button>
