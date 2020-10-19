@@ -1,23 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Web Audio Fun</title>
-    <link href="./index.css" rel="stylesheet" />
-  </head>
-  <body>
-    <!-- Audio source -->
-    <audio src="../assets/guitar.mp3" id="audioClip" controls loop></audio>
 
-    <!-- Transport controls -->
-    <button type="button" id="play">Play</button>
-    <button type="button" id="pause">Pause</button>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web Audio Fun</title>
+  <link href="./index.css" rel="stylesheet" />
+</head>
 
-    <!-- Volume and pan controls -->
-    <input type="range" id="volume" min="0" max="1" step="0.01" />
-    <input type="range" id="panner" min="-1" max="1" step="0.01" />
+<body>
+  <!-- Audio source -->
+  <audio src="../assets/guitar.mp3" id="audioClip" controls preload loop></audio>
 
-    <script src="./index.ts"></script>
-  </body>
+  <!-- Transport controls -->
+  <button type="button" id="play">Play</button>
+  <button type="button" id="pause">Pause</button>
+
+  <!-- Volume and pan controls -->
+  <p>Volume</p>
+  <input type="range" id="volume" min="0" max="1" step="0.01" />
+  <p>Pan</p>
+  <input type="range" id="panner" min="-1" max="1" step="0.01" />
+
+  <canvas id="visualizer" width="400" height="256"></canvas>
+
+  <script src="./index.ts"></script>
+</body>
+
 </html>
