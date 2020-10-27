@@ -1,6 +1,6 @@
 const WIDTH = 400;
 const HEIGHT = 256;
-const NUM_BARS = 10;
+const NUM_BARS = 40;
 const BAR_WIDTH = WIDTH / NUM_BARS;
 
 // Declare globals
@@ -118,12 +118,22 @@ function loop(timestamp: DOMHighResTimeStamp) {
   // Clear the canvas before drawing
   canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
 
+  canvasCtx.beginPath();
+  canvasCtx.moveTo(0, 0);
+
+
   // Draw amplitude bars
-  for (var i = 0; i < NUM_BARS; i++) {
+  for (var i = 0; i <= NUM_BARS; i++) {
     const barHeight = dataArray[i];
     canvasCtx.fillStyle = `hsl(${(barHeight) * 360 / 255},100%,50%)`;
-    canvasCtx.fillRect((BAR_WIDTH * i) + 3, HEIGHT - barHeight, BAR_WIDTH, barHeight);
+    canvasCtx.strokeStyle = `rgb(255, 0, 0)`;
+    canvasCtx.lineWidth = 1;
+
+    const x = BAR_WIDTH * i;
+    const y = HEIGHT - barHeight;
+    canvasCtx.lineTo(x, y);
   }
+  canvasCtx.stroke();
 
   // Trigger the next frame
   requestAnimationFrame(loop);
