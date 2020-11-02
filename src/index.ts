@@ -1,6 +1,7 @@
+// Constants
 const WIDTH = 400;
 const HEIGHT = 256;
-const NUM_BARS = 10;
+const NUM_BARS = 40;
 const BAR_WIDTH = WIDTH / NUM_BARS;
 
 // Declare globals
@@ -9,6 +10,8 @@ let input: MediaElementAudioSourceNode;
 let gainNode: GainNode;
 let stereoPannerNode: StereoPannerNode;
 let analyserNode: AnalyserNode;
+let shaperNode: WaveShaperNode;
+let filterNode: BiquadFilterNode;
 
 // Element refs
 const source = document.getElementById('audioClip') as HTMLMediaElement;
@@ -19,6 +22,7 @@ const stereoPannerSlider = document.getElementById(
   'panner'
 ) as HTMLInputElement;
 const visualizer = document.getElementById('visualizer') as HTMLCanvasElement;
+const shaperCheckbox = document.getElementById('shaper') as HTMLInputElement;
 
 let bufferLength: number;
 let dataArray: Uint8Array;
@@ -39,8 +43,21 @@ function initializeAudio() {
   // Analyzer Node
   analyserNode = context.createAnalyser();
 
+  // Analyser init
+  analyserNode.fftSize = 8192;
+  bufferLength = analyserNode.frequencyBinCount;
+  dataArray = new Uint8Array(bufferLength);
+
   // Stereo Panning Node
   stereoPannerNode = context.createStereoPanner();
+
+  // Waveshaper node
+  shaperNode = context.createWaveShaper();
+
+  // Biquad Filter
+  filterNode = context.createBiquadFilter();
+  filterNode.type = 'highpass';
+  filterNode.frequency.value = 1000;
 
   // Add event listeners
   playButton.addEventListener(
@@ -63,7 +80,6 @@ function initializeAudio() {
   volumeSlider.addEventListener(
     'input',
     function () {
-      console.log(volumeSlider.value);
       gainNode.gain.value = parseFloat(volumeSlider.value);
     },
     false
@@ -72,24 +88,33 @@ function initializeAudio() {
   stereoPannerSlider.addEventListener(
     'input',
     function () {
-      console.log(stereoPannerSlider.value);
       stereoPannerNode.pan.value = parseFloat(stereoPannerSlider.value);
     },
     false
   );
 
+  shaperCheckbox.addEventListener(
+    'change',
+    function () {
+      const isUsingShaper = shaperCheckbox.checked;
+      if (isUsingShaper) {
+        shaperNode.curve = makeDistortionCurve(400);
+        shaperNode.oversample = '4x';
+      } else {
+        shaperNode.curve = null;
+        shaperNode.oversample = 'none';
+      }
+    }
+  );
+
   // Build audio node graph
   input
     .connect(gainNode)
+    //.connect(filterNode)
+    .connect(shaperNode)
     .connect(stereoPannerNode)
     .connect(analyserNode)
     .connect(context.destination);
-
-  // Analyser init
-  analyserNode.fftSize = 256;
-  bufferLength = analyserNode.frequencyBinCount;
-  console.log(bufferLength);
-  dataArray = new Uint8Array(bufferLength);
 
   // Start canvas render loop
   requestAnimationFrame(loop);
@@ -111,20 +136,43 @@ const canvasCtx = visualizer.getContext(
  * of the audio data.
  * @param timestamp Elapsed time since animation started
  */
-function loop(timestamp: DOMHighResTimeStamp) {
+function loop(timestamp: DOMHighResTimeStamp): void {
   // Query the analyser for the current audio frequency data
   analyserNode.getByteFrequencyData(dataArray);
 
   // Clear the canvas before drawing
   canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
 
+  canvasCtx.beginPath();
+
   // Draw amplitude bars
-  for (var i = 0; i < NUM_BARS; i++) {
+  for (var i = 0; i <= NUM_BARS; i++) {
     const barHeight = dataArray[i];
-    canvasCtx.fillStyle = `hsl(${(barHeight) * 360 / 255},100%,50%)`;
-    canvasCtx.fillRect((BAR_WIDTH * i) + 3, HEIGHT - barHeight, BAR_WIDTH, barHeight);
+    canvasCtx.strokeStyle = `rgb(255, 0, 0)`;
+    canvasCtx.lineWidth = 1;
+
+    const x = BAR_WIDTH * i;
+    const y = HEIGHT - barHeight;
+    canvasCtx.lineTo(x, y);
   }
+
+  canvasCtx.stroke();
 
   // Trigger the next frame
   requestAnimationFrame(loop);
+};
+
+
+function makeDistortionCurve(amount: number): Float32Array {
+  var k = amount || 50,
+    n_samples = 44100,
+    curve = new Float32Array(n_samples),
+    deg = Math.PI / 180,
+    i = 0,
+    x;
+  for ( ; i < n_samples; ++i ) {
+    x = i * 2 / n_samples - 1;
+    curve[i] = ( 3 + k ) * x * 20 * deg / ( Math.PI + k * Math.abs(x) );
+  }
+  return curve;
 };
