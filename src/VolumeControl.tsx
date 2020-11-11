@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, ChangeEvent } from 'react';
+import React, { useEffect, useState, useCallback, ChangeEvent, useRef } from 'react';
 import { useAudioContext } from './AudioContext';
 
 interface VolumeControlProps {
@@ -12,28 +12,26 @@ const VolumeControl: React.FC<VolumeControlProps> = ({
   max = 100,
   step = 1
 }) => {
-  const { register, audioContext } = useAudioContext();
+  const { mediaSourceRef, audioContext } = useAudioContext();
   const [registered, setRegistered] = useState(false);
 
-  const [gainNode, setGainNode] = useState<GainNode | undefined>(undefined);
+  const gainNode = useRef<GainNode | undefined>(undefined);
 
   useEffect(() => {
-    if (!registered && audioContext) {
-      const gain = audioContext.createGain();
-      register(gain);
-      setGainNode(gain);
+    if (!registered && mediaSourceRef && mediaSourceRef.current && audioContext) {
+      gainNode.current = audioContext.createGain();
+      mediaSourceRef.current.connect(gainNode.current);
       setRegistered(true);
     }
-  }, [register, audioContext, registered]);
+  }, [audioContext, registered, mediaSourceRef]);
 
-  const onVolumeChange = useCallback(
+  const onVolumeChange =
     (e: ChangeEvent<HTMLInputElement>) => {
-      if (gainNode) {
-        gainNode.gain.value = parseFloat(e.target.value);
+      console.log('volume channged', parseFloat(e.target.value));
+      if (gainNode.current) {
+        gainNode.current.gain.value = parseFloat(e.target.value);
       }
-    },
-    [gainNode]
-  );
+    };
 
   return (
     <>

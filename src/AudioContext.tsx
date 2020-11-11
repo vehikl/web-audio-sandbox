@@ -3,19 +3,25 @@ import React, {
   useContext,
   useState,
   useEffect,
-  useCallback
+  useCallback,
+  useRef
 } from 'react';
 
 interface AppAudioContextInterface {
   audioContext?: AudioContext;
   inputSource?: MediaElementAudioSourceNode;
   register: (node: AudioNode) => void;
+  registerMediaSource: (node: HTMLMediaElement) => void;
+  mediaSourceRef?: React.MutableRefObject<MediaElementAudioSourceNode | undefined>
 }
 
 const AppAudioContext = createContext<AppAudioContextInterface>({
   register: () => {
     /** */
-  }
+  },
+  registerMediaSource: () => {
+    /** */
+  },
 });
 
 export const useAudioContext = () => useContext(AppAudioContext);
@@ -25,6 +31,7 @@ export const AudioContextProvider: React.FC = ({ children }) => {
     undefined
   );
   const [headNode, setHeadNode] = useState<AudioNode | undefined>(undefined);
+  const mediaSourceRef = useRef<MediaElementAudioSourceNode | undefined>();
   // console.log(headNode);
 
   // useEffect(() => {
@@ -44,15 +51,19 @@ export const AudioContextProvider: React.FC = ({ children }) => {
   //   }
   // }, [headNode, audioContext]);
 
-  const register: AppAudioContextInterface['register'] = (newNode) => {
-    setHeadNode((node) => {
-      console.log(node, newNode)
-      if (node && audioContext) {
-        node.connect(newNode);
-        return node.connect(audioContext.destination);
+  const registerMediaSource: AppAudioContextInterface['registerMediaSource'] = (mediaElement) => {
+    setAudioContext((currentAudioContext) => {
+      if (!mediaSourceRef.current && currentAudioContext) {
+        mediaSourceRef.current = currentAudioContext.createMediaElementSource(mediaElement);
       }
-      return newNode;
+      return currentAudioContext;
     });
+  }
+
+  const register: AppAudioContextInterface['register'] = (newNode) => {
+    if (mediaSourceRef.current && audioContext) {
+      mediaSourceRef.current.connect(newNode);
+    }
   }
 
   const initializeAudio = useCallback(() => {
@@ -100,7 +111,7 @@ export const AudioContextProvider: React.FC = ({ children }) => {
   }, [initializeAudio]);
 
   return (
-    <AppAudioContext.Provider value={{ audioContext, register }}>
+    <AppAudioContext.Provider value={{ audioContext, register, registerMediaSource, mediaSourceRef }}>
       {children}
     </AppAudioContext.Provider>
   );
